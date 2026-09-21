@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古文単語100 - スマート暗記</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --primary: #4a6fa5;
+            --primary-dark: #3b5984;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --accent-yellow: #f1c40f;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8c8d;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding: 20px 12px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 640px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            box-shadow: var(--card-shadow);
+            margin-top: 10px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Kiwi Maru', serif;
+            color: var(--primary-dark);
+            font-size: 26px;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            background: #f0f3f8;
+            padding: 4px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 0;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.25s ease;
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: var(--primary);
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        /* Filters & Controls */
+        .control-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+        }
+
+        .select-wrapper select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            font-size: 14px;
+            color: var(--text-dark);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn-action {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-action:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Flashcard Styles */
+        .flashcard-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .card-counter {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card-stage {
+            width: 100%;
+            height: 240px;
+            perspective: 1000px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        }
+
+        .card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            background: #ffffff;
+            border: 2px solid #edf2f7;
+            text-align: center;
+        }
+
+        .card-face.back {
+            transform: rotateY(180deg);
+            background: #fafcfe;
+        }
+
+        .badge-status {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-wrong {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .badge-correct {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .badge-unlearned {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .word-id {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .word-display {
+            font-size: 34px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-family: 'Kiwi Maru', serif;
+        }
+
+        .meaning-display {
+            font-size: 19px;
+            line-height: 1.6;
+            color: #334155;
+            font-weight: 500;
+        }
+
+        .flip-hint {
+            position: absolute;
+            bottom: 14px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Feedback Buttons */
+        .feedback-actions {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 16px;
+            opacity: 0.3;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .feedback-actions.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .btn-feedback {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+
+        .btn-feedback:active {
+            transform: scale(0.98);
+        }
+
+        .btn-wrong {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-wrong:hover {
+            background: #fca5a5;
+        }
+
+        .btn-correct {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .btn-correct:hover {
+            background: #86efac;
+        }
+
+        .nav-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 10px;
+        }
+
+        .btn-nav {
+            flex: 1;
+            padding: 10px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-dark);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn-nav:hover {
+            background: #e2e8f0;
+        }
+
+        /* Quiz Mode */
+        .quiz-area {
+            text-align: center;
+        }
+
+        .quiz-card {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            border: 2px solid #edf2f7;
+            margin-bottom: 20px;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .option-btn {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            border: 1.5px solid #e2e8f0;
+            background: #fff;
+            text-align: left;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-dark);
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+
+        .option-btn.correct {
+            background: #dcfce7 !important;
+            border-color: #22c55e !important;
+            color: #15803d;
+            font-weight: 700;
+        }
+
+        .option-btn.wrong {
+            background: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #b91c1c;
+        }
+
+        /* Word List Mode */
+        .list-area {
+            max-height: 480px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .list-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .list-num {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--primary);
+            width: 32px;
+        }
+
+        .list-word {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--text-dark);
+        }
+
+        .list-meaning {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .list-status-toggle {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>古文単語 100</h1>
+        <div class="subtitle">高校入試レベル 完全攻略</div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-card" onclick="switchTab('card')">暗記カード</button>
+        <button class="tab-btn" id="tab-quiz" onclick="switchTab('quiz')">4択テスト</button>
+        <button class="tab-btn" id="tab-list" onclick="switchTab('list')">単語一覧</button>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <div class="select-wrapper">
+            <select id="range-select" onchange="handleFilterChange()">
+                <option value="all">全範囲 (1 - 100)</option>
+                <option value="wrong">⚠️ 要復習の単語のみ</option>
+                <option value="1-20">No. 1 - 20</option>
+                <option value="21-40">No. 21 - 40</option>
+                <option value="41-60">No. 41 - 60</option>
+                <option value="61-80">No. 61 - 80</option>
+                <option value="81-100">No. 81 - 100</option>
+            </select>
+        </div>
+        <button class="btn-action" onclick="shuffleCurrentList()">🔀 シャッフル</button>
+    </div>
+
+    <!-- Mode 1: Flashcards -->
+    <div id="view-card" class="flashcard-area">
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="card-progress"></div>
+        </div>
+        <div class="card-counter">
+            <span id="card-index-text">1 / 100</span>
+            <span id="wrong-count-text">要復習: 0語</span>
+        </div>
+
+        <div class="card-stage" onclick="flipCard()">
+            <div class="card-inner" id="card-element">
+                <!-- Front -->
+                <div class="card-face front">
+                    <span class="word-id" id="card-front-id">No.1</span>
+                    <span class="badge-status" id="card-front-badge">未学習</span>
+                    <div class="word-display" id="card-front-word">あいなし</div>
+                    <div class="flip-hint">タップして意味を表示</div>
+                </div>
+                <!-- Back -->
+                <div class="card-face back">
+                    <span class="word-id" id="card-back-id">No.1</span>
+                    <div class="meaning-display" id="card-back-meaning">①おもしろくない。②不適当だ。</div>
+                    <div class="flip-hint">タップで戻る</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Correct / Wrong Recording -->
+        <div class="feedback-actions" id="feedback-actions">
+            <button class="btn-feedback btn-wrong" onclick="recordResult(false)">✕ まだ（要復習）</button>
+            <button class="btn-feedback btn-correct" onclick="recordResult(true)">◯ 覚えた！</button>
+        </div>
+
+        <div class="nav-controls">
+            <button class="btn-nav" onclick="prevCard()">← 前へ</button>
+            <button class="btn-nav" onclick="nextCard()">次へ →</button>
+        </div>
+    </div>
+
+    <!-- Mode 2: Quiz -->
+    <div id="view-quiz" class="quiz-area hidden">
+        <div class="card-counter">
+            <span id="quiz-index-text">問題 1 / 100</span>
+        </div>
+        <div class="quiz-card">
+            <div class="word-display" id="quiz-word">あいなし</div>
+        </div>
+        <div class="quiz-options" id="quiz-options"></div>
+        <button class="btn-action hidden" id="quiz-next-btn" style="width: 100%; padding: 12px;" onclick="nextQuizQuestion()">次の問題へ</button>
+    </div>
+
+    <!-- Mode 3: Word List -->
+    <div id="view-list" class="list-area hidden" id="list-container">
+        <!-- Dynamic list rendering -->
+    </div>
+</div>
+
+<script>
+    const rawWordData = [
+        { id: 1, word: "あいなし", meaning: "①おもしろくない。②不適当だ。" },
+        { id: 2, word: "あかず / あかで", meaning: "満足できずに。" },
+        { id: 3, word: "あからさまなり", meaning: "①急だ。②ちょっと。" },
+        { id: 4, word: "あさまし", meaning: "①意外だ。②驚きあきれる。③卑怯だ。" },
+        { id: 5, word: "あした", meaning: "①朝。②（何かが起きた）翌朝。" },
+        { id: 6, word: "あそぶ", meaning: "①楽しむ。②（音楽を）奏する。" },
+        { id: 7, word: "あはれなり", meaning: "しみじみと感じられる。" },
+        { id: 8, word: "あまた", meaning: "①数多く。②非常に。" },
+        { id: 9, word: "あやし", meaning: "①不思議だ。②身分が低い。" },
+        { id: 10, word: "あらまほし", meaning: "望ましい。" },
+        { id: 11, word: "ありがたし", meaning: "①珍しい。②まれだ。③難い。" },
+        { id: 12, word: "いかし", meaning: "①おごそかだ。②はなはだしい。" },
+        { id: 13, word: "いざ、〜", meaning: "さあ、さて。" },
+        { id: 14, word: "いざさせたまへ", meaning: "さあ、いらっしゃい。" },
+        { id: 15, word: "いと", meaning: "①たいそう。②（打消しの語を伴って）それほど（〜ない）。" },
+        { id: 16, word: "いはく", meaning: "言うことには。" },
+        { id: 17, word: "いみじ", meaning: "①はなはだしい。②よい。③大変だ。" },
+        { id: 18, word: "うつくし", meaning: "①かわいい。②きれいだ。③立派だ。" },
+        { id: 19, word: "うたて", meaning: "いやに。情けなく。" },
+        { id: 20, word: "え〜（打消）", meaning: "〜できない。" },
+        { id: 21, word: "おきな", meaning: "老人。" },
+        { id: 22, word: "おこない", meaning: "①行動。②仏道の修行。" },
+        { id: 23, word: "おとなふ", meaning: "①音をたてる。②訪ねる。③手紙を出す。" },
+        { id: 24, word: "おぼしめす", meaning: "お思いになる。" },
+        { id: 25, word: "おぼす", meaning: "お思いになる。" },
+        { id: 26, word: "おぼゆ", meaning: "①思われる。②思い出される。③似る。" },
+        { id: 27, word: "おまへ", meaning: "①貴人や神仏の前。②天皇や貴人の尊称。③あなた様。" },
+        { id: 28, word: "おもしろし", meaning: "風流である。趣深い。" },
+        { id: 29, word: "かしこし", meaning: "①恐ろしい。②尊い。③利口だ。" },
+        { id: 30, word: "かたはらいたし", meaning: "①いたたまれない。②みっともない。" },
+        { id: 31, word: "かたへ", meaning: "①片側。②部分。③そば。④仲間。" },
+        { id: 32, word: "かなし", meaning: "①かわいい。いとしい。②かわいそうだ。" },
+        { id: 33, word: "きこしめす", meaning: "①お聞きになる。ご知息になる。②召し上がる。" },
+        { id: 34, word: "きは", meaning: "①端。②境目。③最後。④身分。" },
+        { id: 35, word: "くだる", meaning: "①降りる。②都から地方へ行く。③物が与えられる。④時がたつ。" },
+        { id: 36, word: "くちをし", meaning: "①残念だ。②つまらない。③情けない。" },
+        { id: 37, word: "くもゐ", meaning: "①大空。②雲。③遠く離れたところ。④宮中。" },
+        { id: 38, word: "げに", meaning: "①真実に。②本当に。" },
+        { id: 39, word: "ここら / そこら", meaning: "①たくさん。②たいそう。" },
+        { id: 40, word: "こころうし", meaning: "①つらい。②いやだ。" },
+        { id: 41, word: "こころにくし", meaning: "①奥ゆかしい。②心ひかれる。" },
+        { id: 42, word: "ことごとし", meaning: "大げさだ。" },
+        { id: 43, word: "ことふ", meaning: "①ものを言う。②尋ねる。③訪問する。" },
+        { id: 44, word: "ことわり", meaning: "①道理。②理由。" },
+        { id: 45, word: "さうらふ", meaning: "①お仕えする。②あります。" },
+        { id: 46, word: "さとし", meaning: "賢い。" },
+        { id: 47, word: "さやかなり", meaning: "①はっきりしている。②音声が高く澄んでいる。③明るい。" },
+        { id: 48, word: "さらでも", meaning: "そうでなくても。" },
+        { id: 49, word: "さらなり", meaning: "言うまでもない。" },
+        { id: 50, word: "さらに〜（打消）", meaning: "まったく〜ない。" },
+        { id: 51, word: "すなはち", meaning: "①すぐに。②その時に。③つまり。" },
+        { id: 52, word: "先達（せんだつ）", meaning: "案内や指導をする人。" },
+        { id: 53, word: "そこはかとなし", meaning: "とりとめがない。" },
+        { id: 54, word: "た行", meaning: "（※該当単語）" },
+        { id: 55, word: "たがふ", meaning: "①食い違う。②背く。③変わる。" },
+        { id: 56, word: "たてまつる", meaning: "①差し上げる。②参上させる。③召し上がる。④お召しになる。⑤お乗りになる。" },
+        { id: 57, word: "たまふ", meaning: "お与えになる。補助動詞で「〜なさる」。" },
+        { id: 58, word: "ちぎり", meaning: "①約束。②宿縁。" },
+        { id: 59, word: "つきづきし", meaning: "似つかわしい。" },
+        { id: 60, word: "つごもり", meaning: "①月の下旬。②月の最終日。" },
+        { id: 61, word: "つめて", meaning: "①早朝。②その翌朝。" },
+        { id: 62, word: "ときめく", meaning: "時勢に合って栄える。" },
+        { id: 63, word: "年ごろ", meaning: "長年の間。" },
+        { id: 64, word: "なさけなし", meaning: "①思いやりがない。②無風流だ。" },
+        { id: 65, word: "な〜そ", meaning: "〜するな。" },
+        { id: 66, word: "なまめかし", meaning: "①若々しい。②優美だ。③上品だ。" },
+        { id: 67, word: "なほ", meaning: "①やはり。②いっそう。③再び。" },
+        { id: 68, word: "におふ", meaning: "①色が映える。②香りが漂う。" },
+        { id: 69, word: "ののしる", meaning: "①大声で騒ぐ。②勢いが盛んである。" },
+        { id: 70, word: "のたまふ", meaning: "おっしゃる。" },
+        { id: 71, word: "はかる", meaning: "①推し量る。②予想する。" },
+        { id: 72, word: "はべる", meaning: "①お仕えする。②あります。" },
+        { id: 73, word: "はた", meaning: "やはり。" },
+        { id: 74, word: "はづかし", meaning: "①きまりが悪い。②こちらが後れるほど相手が立派だ。" },
+        { id: 75, word: "ひがごと", meaning: "①道理に外れたこと。②間違い。" },
+        { id: 76, word: "ひねもす", meaning: "一日中。" },
+        { id: 77, word: "ふと", meaning: "①簡単に。②さっと。③不意に。" },
+        { id: 78, word: "文（ふみ）", meaning: "①文書。②書物。③手紙。④学問。" },
+        { id: 79, word: "本意（ほい）", meaning: "本来の意志。目的。" },
+        { id: 80, word: "まうづ", meaning: "①伺う（参上する）。②お参りに行く。" },
+        { id: 81, word: "まなざし", meaning: "①まなざし。②表情。" },
+        { id: 82, word: "まめまめし", meaning: "①実用的だ。②まじめだ。" },
+        { id: 83, word: "みやび", meaning: "上品で優雅なこと。" },
+        { id: 84, word: "むつかし", meaning: "①わずらわしい。②恐ろしい。" },
+        { id: 85, word: "めづらし", meaning: "①すばらしい。②めったにない。" },
+        { id: 86, word: "ものし", meaning: "①気が晴れない。②おっくうだ。③不快だ。" },
+        { id: 87, word: "ものぐるほし", meaning: "心が乱れるようだ。" },
+        { id: 88, word: "やうやう", meaning: "ようやく。" },
+        { id: 89, word: "やがて", meaning: "①そのまま。②すぐに。" },
+        { id: 90, word: "やすらふ", meaning: "①ためらう。②休む。" },
+        { id: 91, word: "山際（やまぎは）", meaning: "山の稜線に近い空。" },
+        { id: 92, word: "ゆかし", meaning: "①見たい。知りたい。" },
+        { id: 93, word: "よろづ", meaning: "①たくさん。②すべてのこと。" },
+        { id: 94, word: "らうたし", meaning: "かわいい。愛らしい。" },
+        { id: 95, word: "わりなし", meaning: "①道理に合わない。②たえがたい。③格別に優れている。" },
+        { id: 96, word: "わろし", meaning: "よくない。" },
+        { id: 97, word: "居る（ゐる）", meaning: "座っている。" },
+        { id: 98, word: "をかし", meaning: "①おもしろい。②趣がある。③すばらしい。" },
+        { id: 99, word: "をかしげなり", meaning: "趣がある。" },
+        { id: 100, word: "をりふし", meaning: "①季節、時。②ちょうどその時。" }
+    ];
+
+    // State Management
+    let statusMap = JSON.parse(localStorage.getItem('kobun_status_map') || '{}'); 
+    // Status values: 'correct', 'wrong', or undefined (unlearned)
+
+    let currentMode = 'card';
+    let filteredList = [];
+    let currentIndex = 0;
+
+    function saveStatus() {
+        localStorage.setItem('kobun_status_map', JSON.stringify(statusMap));
+        updateWrongCount();
+    }
+
+    function updateWrongCount() {
+        const wrongCount = Object.values(statusMap).filter(v => v === 'wrong').length;
+        document.getElementById('wrong-count-text').textContent = `要復習: ${wrongCount}語`;
+    }
+
+    function handleFilterChange() {
+        const val = document.getElementById('range-select').value;
+        if (val === 'all') {
+            filteredList = [...rawWordData];
+        } else if (val === 'wrong') {
+            filteredList = rawWordData.filter(item => statusMap[item.id] === 'wrong');
+        } else {
+            const [start, end] = val.split('-').map(Number);
+            filteredList = rawWordData.filter(item => item.id >= start && item.id <= end);
+        }
+
+        currentIndex = 0;
+        if (currentMode === 'card') renderCard();
+        if (currentMode === 'quiz') renderQuiz();
+        if (currentMode === 'list') renderList();
+    }
+
+    function shuffleCurrentList() {
+        for (let i = filteredList.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [filteredList[i], filteredList[j]] = [filteredList[j], filteredList[i]];
+        }
+        currentIndex = 0;
+        if (currentMode === 'card') renderCard();
+        if (currentMode === 'quiz') renderQuiz();
+    }
+
+    function switchTab(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-${mode}`).classList.add('active');
+
+        document.getElementById('view-card').classList.add('hidden');
+        document.getElementById('view-quiz').classList.add('hidden');
+        document.getElementById('view-list').classList.add('hidden');
+
+        document.getElementById(`view-${mode}`).classList.remove('hidden');
+
+        handleFilterChange();
+    }
+
+    /* --- Flashcard Logic --- */
+    function renderCard() {
+        const cardElem = document.getElementById('card-element');
+        cardElem.classList.remove('flipped');
+        document.getElementById('feedback-actions').classList.remove('active');
+
+        if (filteredList.length === 0) {
+            document.getElementById('card-front-word').textContent = "該当なし";
+            document.getElementById('card-back-meaning').textContent = "該当する単語がありません。";
+            document.getElementById('card-index-text').textContent = "0 / 0";
+            document.getElementById('card-progress').style.width = "0%";
+            return;
+        }
+
+        const item = filteredList[currentIndex];
+        const status = statusMap[item.id];
+
+        document.getElementById('card-front-id').textContent = `No.${item.id}`;
+        document.getElementById('card-back-id').textContent = `No.${item.id}`;
+        document.getElementById('card-front-word').textContent = item.word;
+        document.getElementById('card-back-meaning').textContent = item.meaning;
+
+        // Badge Update
+        const badge = document.getElementById('card-front-badge');
+        if (status === 'wrong') {
+            badge.textContent = '要復習';
+            badge.className = 'badge-status badge-wrong';
+        } else if (status === 'correct') {
+            badge.textContent = '習得済';
+            badge.className = 'badge-status badge-correct';
+        } else {
+            badge.textContent = '未学習';
+            badge.className = 'badge-status badge-unlearned';
+        }
+
+        // Counter & Progress
+        document.getElementById('card-index-text').textContent = `${currentIndex + 1} / ${filteredList.length}`;
+        const pct = ((currentIndex + 1) / filteredList.length) * 100;
+        document.getElementById('card-progress').style.width = `${pct}%`;
+    }
+
+    function flipCard() {
+        if (filteredList.length === 0) return;
+        const cardElem = document.getElementById('card-element');
+        cardElem.classList.toggle('flipped');
+        
+        if (cardElem.classList.contains('flipped')) {
+            document.getElementById('feedback-actions').classList.add('active');
+        }
+    }
+
+    function recordResult(isCorrect) {
+        if (filteredList.length === 0) return;
+        const item = filteredList[currentIndex];
+        statusMap[item.id] = isCorrect ? 'correct' : 'wrong';
+        saveStatus();
+        nextCard();
+    }
+
+    function nextCard() {
+        if (currentIndex < filteredList.length - 1) {
+            currentIndex++;
+            renderCard();
+        }
+    }
+
+    function prevCard() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderCard();
+        }
+    }
+
+    /* --- Quiz Logic --- */
+    function renderQuiz() {
+        const nextBtn = document.getElementById('quiz-next-btn');
+        nextBtn.classList.add('hidden');
+
+        if (filteredList.length === 0) {
+            document.getElementById('quiz-word').textContent = "該当なし";
+            document.getElementById('quiz-options').innerHTML = "";
+            return;
+        }
+
+        const item = filteredList[currentIndex];
+        document.getElementById('quiz-index-text').textContent = `問題 ${currentIndex + 1} / ${filteredList.length}`;
+        document.getElementById('quiz-word').textContent = item.word;
+
+        // Choices generator
+        let options = [item.meaning];
+        while (options.length < 4 && options.length < rawWordData.length) {
+            const rnd = rawWordData[Math.floor(Math.random() * rawWordData.length)].meaning;
+            if (!options.includes(rnd)) options.push(rnd);
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        const container = document.getElementById('quiz-options');
+        container.innerHTML = '';
+
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = opt;
+            btn.onclick = () => handleQuizAnswer(btn, opt, item.meaning, item.id);
+            container.appendChild(btn);
+        });
+    }
+
+    function handleQuizAnswer(selectedBtn, selectedText, correctText, wordId) {
+        const allOpts = document.querySelectorAll('.option-btn');
+        allOpts.forEach(b => b.onclick = null);
+
+        if (selectedText === correctText) {
+            selectedBtn.classList.add('correct');
+            statusMap[wordId] = 'correct';
+        } else {
+            selectedBtn.classList.add('wrong');
+            statusMap[wordId] = 'wrong';
+            allOpts.forEach(b => {
+                if (b.textContent === correctText) b.classList.add('correct');
+            });
+        }
+        saveStatus();
+        document.getElementById('quiz-next-btn').classList.remove('hidden');
+    }
+
+    function nextQuizQuestion() {
+        if (currentIndex < filteredList.length - 1) {
+            currentIndex++;
+            renderQuiz();
+        } else {
+            alert('選択範囲のクイズがすべて終了しました！');
+            currentIndex = 0;
+            renderQuiz();
+        }
+    }
+
+    /* --- List Logic --- */
+    function renderList() {
+        const container = document.getElementById('view-list');
+        container.innerHTML = '';
+
+        if (filteredList.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">該当する単語がありません</div>';
+            return;
+        }
+
+        filteredList.forEach(item => {
+            const status = statusMap[item.id];
+            const div = document.createElement('div');
+            div.className = 'list-item';
+
+            let btnText = '未学習';
+            let btnClass = 'badge-unlearned';
+            if (status === 'wrong') {
+                btnText = '要復習 ✕';
+                btnClass = 'badge-wrong';
+            } else if (status === 'correct') {
+                btnText = '習得済 ◯';
+                btnClass = 'badge-correct';
+            }
+
+            div.innerHTML = `
+                <div class="list-item-left">
+                    <span class="list-num">No.${item.id}</span>
+                    <div>
+                        <div class="list-word">${item.word}</div>
+                        <div class="list-meaning">${item.meaning}</div>
+                    </div>
+                </div>
+                <button class="list-status-toggle badge-status ${btnClass}">${btnText}</button>
+            `;
+
+            const btn = div.querySelector('button');
+            btn.onclick = () => {
+                if (statusMap[item.id] === 'correct') {
+                    statusMap[item.id] = 'wrong';
+                } else if (statusMap[item.id] === 'wrong') {
+                    delete statusMap[item.id];
+                } else {
+                    statusMap[item.id] = 'correct';
+                }
+                saveStatus();
+                renderList();
+            };
+
+            container.appendChild(div);
+        });
+    }
+
+    // Initialize
+    updateWrongCount();
+    handleFilterChange();
+</script>
+</body>
+</html>
